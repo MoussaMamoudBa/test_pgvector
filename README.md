@@ -30,12 +30,14 @@ Cela va :
 
 - Démarrer PostgreSQL avec l'extension **pgvector**
 - Créer la base `vectordb` et la table `documents` via `db/init.sql`
-- Démarrer l'API FastAPI sur le port `8000`
+- Exposer l'API FastAPI sur le port **8001** de l'hôte (mapping `8001:8000`)
 
 Accès :
 
-- API FastAPI : `http://localhost:8000`
-- Endpoint de santé : `http://localhost:8000/health`
+- API FastAPI : **http://localhost:8001**
+- Page d'accueil (infos) : http://localhost:8001/
+- Documentation Swagger : http://localhost:8001/docs
+- Endpoint de santé : http://localhost:8001/health
 
 ## 4. Utiliser le script de démo (insertion + recherche)
 
@@ -61,15 +63,14 @@ docker compose exec -e DEMO_QUERY="Je veux parler de PostgreSQL" api python scri
 ## 5. Tester l'API `/search`
 
 1. Assurez-vous que la table `documents` contient des données :
-   - Soit en exécutant `scripts/demo.py` (voir section précédente)
-   - Soit en insérant vous-même des lignes dans `documents`
-
+  - Soit en exécutant `scripts/demo.py` (voir section précédente)
+  - Soit en insérant vous-même des lignes dans `documents`
 2. Appelez l'endpoint `/search` avec un JSON de la forme `{ "query": "..." }`.
 
 ### Exemple avec `curl`
 
 ```bash
-curl -X POST "http://localhost:8000/search" \
+curl -X POST "http://localhost:8001/search" \
   -H "Content-Type: application/json" \
   -d '{"query": "Quelle technologie pour faire de la recherche vectorielle ?"}'
 ```
@@ -87,7 +88,7 @@ Réponse typique :
 ### Exemple avec `httpie`
 
 ```bash
-http POST :8000/search query="Je veux parler de PostgreSQL"
+http POST :8001/search query="Je veux parler de PostgreSQL"
 ```
 
 ## 6. Variables d'environnement principales
@@ -98,10 +99,9 @@ http POST :8000/search query="Je veux parler de PostgreSQL"
   - `POSTGRES_DB=vectordb`
   - `POSTGRES_USER=postgres`
   - `POSTGRES_PASSWORD=postgres`
-
 - **Embeddings** :
   - `OPENAI_API_KEY` (optionnel) : si défini, l'API utilise le modèle `text-embedding-3-small` pour calculer de "vrais" embeddings de texte.
-  - Sinon, des vecteurs pseudo-aléatoires déterministes sont utilisés (mêmes entrées → mêmes vecteurs).
+  - Sinon, des vecteurs pseudo-aléatoires déterministes sont utilisés (mêmes entrées → mêmes vecteurs). La « similarité » n’est alors pas sémantique : le document renvoyé peut sembler sans rapport avec la requête ; avec une clé OpenAI, les résultats sont cohérents.
 
 ## 7. Arrêter les services
 
