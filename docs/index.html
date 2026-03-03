@@ -145,28 +145,66 @@
       .stack-item .role { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
       .stack-item .role::before { content: "· "; color: var(--border); }
 
-      /* ----- Architecture simplifiée ----- */
+      /* ----- Architecture (blocs structurés) ----- */
       .arch {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        gap: 0.35rem;
-        padding: 0.5rem 0;
+        align-items: stretch;
+        gap: 0;
+        padding: 0.25rem 0;
       }
-      .arch-row {
+      .arch-block {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        overflow: hidden;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .arch-block:hover { border-color: #cbd5e1; box-shadow: var(--shadow-hover); }
+      .arch-block.api-block { border-left: 4px solid var(--accent); }
+      .arch-block.db-block { border-left: 4px solid var(--green); }
+      .arch-block-head {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        width: 100%;
-        max-width: 340px;
+        gap: 0.65rem;
+        padding: 0.9rem 1.1rem;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
       }
-      .arch-row .arch-node { flex: 1; margin: 0; max-width: none; }
+      .arch-block-head .ico { flex-shrink: 0; }
+      .arch-block-head .label { font-weight: 700; font-size: 1rem; color: var(--text); margin: 0; }
+      .arch-block-head .detail { font-size: 0.85rem; color: var(--muted); margin: 0.2rem 0 0 0; }
+      .arch-block-body {
+        padding: 1rem 1.1rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.75rem 1.25rem;
+        font-size: 0.85rem;
+      }
+      .arch-block-body .arch-meta { min-width: 0; }
+      .arch-meta-title { font-weight: 600; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.25rem; }
+      .arch-meta-content { color: var(--text); }
+      .arch-meta-content code { font-size: 0.8rem; }
+      .arch-meta-content.nobreak { white-space: nowrap; }
       .arch-arrow-svg {
         flex-shrink: 0;
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
         color: var(--accent);
+        margin: 0.4rem auto;
+        display: block;
       }
+      .arch-table-wrap {
+        grid-column: 1 / -1;
+        margin-top: 0.25rem;
+        padding: 0.75rem 1rem;
+        background: var(--bg);
+        border-radius: 8px;
+        border: 1px solid var(--border);
+      }
+      .arch-table-wrap .label { font-weight: 600; font-size: 0.8rem; color: var(--text); margin-bottom: 0.4rem; display: block; }
+      .arch-table-wrap pre { margin: 0; font-size: 0.78rem; background: var(--card-bg); padding: 0.6rem 0.75rem; border-radius: 6px; }
 
       /* ----- Arrows & flow ----- */
       .flow {
@@ -209,18 +247,6 @@
         opacity: 0.8;
       }
 
-      .arch-node {
-        padding: 0.75rem 1rem;
-        border-radius: 10px;
-        border: 2px solid var(--border);
-        background: var(--card-bg);
-        transition: border-color 0.2s, transform 0.2s;
-      }
-      .arch-node:hover { border-color: var(--accent); transform: scale(1.02); }
-      .arch-node.api { border-left: 4px solid var(--accent); }
-      .arch-node.db { border-left: 4px solid var(--green); }
-      .arch-node .label { font-weight: 700; font-size: 0.95rem; color: var(--text); display: block; }
-      .arch-node .detail { color: var(--muted); font-size: 0.8rem; display: block; margin-top: 0.2rem; }
 
       /* ----- Workflow : étapes + flèches ----- */
       .workflow {
@@ -302,6 +328,9 @@
       }
       @media (max-width: 500px) { .embed-options { grid-template-columns: 1fr; } }
       .embed-opt {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
         padding: 0.65rem 0.9rem;
         border-radius: 8px;
         border: 1px solid var(--border);
@@ -352,6 +381,26 @@
 
       a { color: var(--accent); text-decoration: none; }
       a:hover { text-decoration: underline; }
+
+      /* ----- Icônes ----- */
+      .ico {
+        width: 1.25rem;
+        height: 1.25rem;
+        flex-shrink: 0;
+        display: inline-block;
+        vertical-align: middle;
+        color: inherit;
+      }
+      .ico-lg { width: 1.5rem; height: 1.5rem; }
+      .section-title .ico { margin-right: 0.35rem; color: var(--accent); }
+      .card-title .ico { color: var(--accent); }
+      .stack-item .ico { color: var(--muted); margin-right: 0.25rem; }
+      .arch-block.api-block .arch-block-head .ico { color: var(--accent); }
+      .arch-block.db-block .arch-block-head .ico { color: var(--green); }
+      .workflow-step-header .ico { color: var(--accent); margin-right: 0.25rem; }
+      .embed-opt .ico { margin-right: 0.35rem; }
+      .embed-opt.openai .ico { color: var(--green); }
+      .embed-opt.fallback .ico { color: var(--orange); }
     </style>
   </head>
   <body>
@@ -365,7 +414,7 @@
       </header>
 
       <section class="card reveal" data-delay="0">
-        <h2 class="card-title"><span class="num">1</span> Objectif du projet</h2>
+        <h2 class="card-title"><span class="num">1</span><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Objectif du projet</h2>
         <p>Ce projet sert de base de test pour :</p>
         <ul>
           <li>stocker des embeddings de texte dans PostgreSQL via pgvector ;</li>
@@ -374,52 +423,122 @@
         </ul>
       </section>
 
-      <h2 class="section-title">Stack et principaux fichiers</h2>
+      <h2 class="section-title"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Stack et principaux fichiers</h2>
       <div class="card reveal" data-delay="0">
         <div class="stack-section">
-          <div class="stack-item"><code>app/main.py</code><span class="role">API FastAPI</span></div>
-          <div class="stack-item"><code>app/vector_utils.py</code><span class="role">DB + embeddings</span></div>
-          <div class="stack-item"><code>scripts/demo.py</code><span class="role">CLI démo</span></div>
-          <div class="stack-item"><code>db/init.sql</code><span class="role">extension + table</span></div>
-          <div class="stack-item"><code>docker-compose.yml</code><span class="role">db + api</span></div>
-          <div class="stack-item"><code>Dockerfile</code><span class="role">Python 3.11</span></div>
-          <div class="stack-item"><code>requirements.txt</code><span class="role">dépendances</span></div>
-          <div class="stack-item"><code>README.md</code><span class="role">instructions</span></div>
+          <div class="stack-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg><code>app/main.py</code><span class="role">API FastAPI</span></div>
+          <div class="stack-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg><code>app/vector_utils.py</code><span class="role">DB + embeddings</span></div>
+          <div class="stack-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg><code>scripts/demo.py</code><span class="role">CLI démo</span></div>
+          <div class="stack-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg><code>db/init.sql</code><span class="role">extension + table</span></div>
+          <div class="stack-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg><code>docker-compose.yml</code><span class="role">db + api</span></div>
+          <div class="stack-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg><code>Dockerfile</code><span class="role">Python 3.11</span></div>
+          <div class="stack-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg><code>requirements.txt</code><span class="role">dépendances</span></div>
+          <div class="stack-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg><code>README.md</code><span class="role">instructions</span></div>
         </div>
       </div>
 
-      <h2 class="section-title">Architecture</h2>
+      <h2 class="section-title"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg> Architecture</h2>
       <div class="card reveal" data-delay="0">
         <div class="arch">
-          <div class="arch-row">
-            <div class="arch-node api">
-              <span class="label">Hôte</span>
-              <span class="detail">localhost:8001 → API</span>
+          <div class="arch-block">
+            <div class="arch-block-head">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+              <div>
+                <p class="label">Machine hôte</p>
+                <p class="detail">Point d’entrée : navigateur, curl, client PostgreSQL</p>
+              </div>
+            </div>
+            <div class="arch-block-body">
+              <div class="arch-meta">
+                <div class="arch-meta-title">Ports exposés</div>
+                <div class="arch-meta-content nobreak"><code>8001</code> → HTTP (API) · <code>5432</code> → PostgreSQL</div>
+              </div>
             </div>
           </div>
           <svg class="arch-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-          <div class="arch-row">
-            <div class="arch-node api">
-              <span class="label">Service api</span>
-              <span class="detail">FastAPI · /health, POST /search</span>
+          <div class="arch-block api-block">
+            <div class="arch-block-head">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+              <div>
+                <p class="label">Service api</p>
+                <p class="detail">Conteneur FastAPI (uvicorn), port interne 8000</p>
+              </div>
+            </div>
+            <div class="arch-block-body">
+              <div class="arch-meta">
+                <div class="arch-meta-title">Image</div>
+                <div class="arch-meta-content"><code>build .</code> (Dockerfile)</div>
+              </div>
+              <div class="arch-meta">
+                <div class="arch-meta-title">Ports</div>
+                <div class="arch-meta-content"><code>8001:8000</code></div>
+              </div>
+              <div class="arch-meta">
+                <div class="arch-meta-title">Dépendance</div>
+                <div class="arch-meta-content"><code>depends_on: db</code> (service_healthy)</div>
+              </div>
+              <div class="arch-meta">
+                <div class="arch-meta-title">Endpoints</div>
+                <div class="arch-meta-content"><code>GET /</code> · <code>GET /health</code> · <code>POST /search</code></div>
+              </div>
+              <div class="arch-meta">
+                <div class="arch-meta-title">Variables d’environnement</div>
+                <div class="arch-meta-content"><code>POSTGRES_HOST=db</code>, <code>POSTGRES_DB=vectordb</code>, <code>POSTGRES_USER</code>, <code>POSTGRES_PASSWORD</code>, <code>OPENAI_API_KEY</code> (opt.)</div>
+              </div>
+              <div class="arch-meta">
+                <div class="arch-meta-title">Réseau</div>
+                <div class="arch-meta-content">Même réseau que <code>db</code>, hostname <code>db</code> résolu</div>
+              </div>
             </div>
           </div>
           <svg class="arch-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-          <div class="arch-row">
-            <div class="arch-node db">
-              <span class="label">Service db</span>
-              <span class="detail">PostgreSQL + pgvector · table documents</span>
+          <div class="arch-block db-block">
+            <div class="arch-block-head">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              <div>
+                <p class="label">Service db</p>
+                <p class="detail">PostgreSQL 16 + extension pgvector</p>
+              </div>
+            </div>
+            <div class="arch-block-body">
+              <div class="arch-meta">
+                <div class="arch-meta-title">Image</div>
+                <div class="arch-meta-content"><code>pgvector/pgvector:pg16</code></div>
+              </div>
+              <div class="arch-meta">
+                <div class="arch-meta-title">Ports</div>
+                <div class="arch-meta-content"><code>5432:5432</code></div>
+              </div>
+              <div class="arch-meta">
+                <div class="arch-meta-title">Volumes</div>
+                <div class="arch-meta-content"><code>db-data</code> (persistance) · <code>./db/init.sql</code> (init)</div>
+              </div>
+              <div class="arch-meta">
+                <div class="arch-meta-title">Healthcheck</div>
+                <div class="arch-meta-content"><code>pg_isready -U postgres</code> (5s, 10 retries)</div>
+              </div>
+              <div class="arch-meta">
+                <div class="arch-meta-title">Base</div>
+                <div class="arch-meta-content"><code>vectordb</code> · user <code>postgres</code></div>
+              </div>
+              <div class="arch-table-wrap">
+                <span class="label">Table <code>documents</code></span>
+                <pre>id        SERIAL PRIMARY KEY
+content   TEXT NOT NULL
+embedding VECTOR(1536) NOT NULL</pre>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <h2 class="section-title">Workflow</h2>
+      <h2 class="section-title"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg> Workflow</h2>
       <div class="card">
         <div class="workflow">
           <div class="workflow-step reveal" data-delay="0">
             <div class="workflow-step-header">
               <span class="workflow-num">1</span>
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               <h3>Démarrer l’environnement</h3>
             </div>
             <p class="workflow-step-desc">À la racine du projet. Lance la base et l’API.</p>
@@ -432,6 +551,7 @@
           <div class="workflow-step reveal" data-delay="1">
             <div class="workflow-step-header">
               <span class="workflow-num">2</span>
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
               <h3>Insérer des documents</h3>
             </div>
             <p class="workflow-step-desc">Dans un autre terminal. Insère 5 docs et affiche le plus proche.</p>
@@ -451,6 +571,7 @@
           <div class="workflow-step reveal" data-delay="2">
             <div class="workflow-step-header">
               <span class="workflow-num">3</span>
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               <h3>Tester l’API</h3>
             </div>
             <p class="workflow-step-desc">Retourne le document le plus similaire au texte envoyé.</p>
@@ -465,7 +586,7 @@
       </div>
 
       <section class="card reveal" data-delay="0">
-        <h2 class="card-title"><span class="num">5</span> Embeddings</h2>
+        <h2 class="card-title"><span class="num">5</span><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg> Embeddings</h2>
         <p style="margin-bottom:0">Fonction centrale : <code>get_embedding_for_text(text)</code> dans <code>app/vector_utils.py</code>.</p>
         <div class="embed-flow">
           <div class="embed-line">
@@ -475,21 +596,22 @@
         </div>
         <div class="embed-options">
           <div class="embed-opt openai">
-            <strong>Avec clé OpenAI</strong>
-            <code>OPENAI_API_KEY</code> défini → modèle <code>text-embedding-3-small</code>
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+            <span><strong>Avec clé OpenAI</strong><br/><code>OPENAI_API_KEY</code> défini → modèle <code>text-embedding-3-small</code></span>
           </div>
           <div class="embed-opt fallback">
-            <strong>Sans clé</strong>
-            Vecteur déterministe (hash du texte), pour tester sans API
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <span><strong>Sans clé</strong><br/>Vecteur déterministe (hash du texte), pour tester sans API</span>
           </div>
         </div>
         <div class="embed-search">
+          <svg class="ico ico-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:0.4rem"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           Recherche en base : opérateur <code>&lt;-&gt;</code> (distance euclidienne) sur le type <code>vector</code> de PostgreSQL.
         </div>
       </section>
 
       <section class="card reveal" data-delay="0">
-        <h2 class="card-title"><span class="num">6</span> Arrêt et nettoyage</h2>
+        <h2 class="card-title"><span class="num">6</span><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/></svg> Arrêt et nettoyage</h2>
         <p>Arrêter les services : <code>docker compose down</code></p>
         <p>Supprimer aussi les données : <code>docker compose down -v</code></p>
       </section>
