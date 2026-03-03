@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Documentation - Demo pgvector + FastAPI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --card-bg: #ffffff;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #e2e8f0;
+        --accent: #0ea5e9;
+        --accent-soft: #e0f2fe;
+        --green: #059669;
+        --green-soft: #d1fae5;
+        --orange: #d97706;
+        --orange-soft: #fffbeb;
+        --shadow: 0 1px 3px rgba(0,0,0,0.06);
+        --shadow-hover: 0 4px 12px rgba(0,0,0,0.08);
+      }
+
+      * { box-sizing: border-box; }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+      }
+
+      /* ----- Header ----- */
+      .hero {
+        text-align: center;
+        padding: 2rem 1rem 2.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .hero h1 {
+        font-size: 1.75rem;
+        margin: 0 0 0.5rem;
+        color: var(--text);
+      }
+      .hero .meta {
+        font-size: 0.95rem;
+        color: var(--muted);
+        max-width: 540px;
+        margin: 0 auto;
+        line-height: 1.5;
+      }
+
+      /* ----- Cards ----- */
+      .card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        padding: 1.25rem 1.35rem;
+        margin-bottom: 1.25rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+      .card:hover {
+        box-shadow: var(--shadow-hover);
+        border-color: #cbd5e1;
+      }
+      .card.reveal {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      .card.reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .card-title {
+        font-size: 1.1rem;
+        margin: 0 0 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .card-title .num {
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+      }
+      .card p { margin: 0 0 0.6rem; line-height: 1.5; color: var(--muted); font-size: 0.9rem; }
+      .card ul { margin: 0.4rem 0 0 1rem; padding: 0; color: var(--muted); font-size: 0.9rem; }
+      .card li { margin-bottom: 0.25rem; }
+      .card li::marker { color: var(--accent); }
+
+      code {
+        font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+        font-size: 0.82rem;
+        background: var(--bg);
+        padding: 0.12rem 0.4rem;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      pre {
+        font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+        font-size: 0.8rem;
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 1rem 1.1rem;
+        border-radius: 10px;
+        overflow-x: auto;
+        margin: 0.6rem 0 0;
+        border: 1px solid #334155;
+      }
+      pre code { background: none; border: none; padding: 0; color: inherit; }
+
+      /* ----- Stack: fichiers en lignes courtes ----- */
+      .stack-section { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+      .stack-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.85rem;
+        background: var(--card-bg);
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        font-size: 0.88rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .stack-item:hover { border-color: var(--accent); box-shadow: var(--shadow-hover); }
+      .stack-item code { font-size: 0.8rem; }
+      .stack-item .role { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
+      .stack-item .role::before { content: "· "; color: var(--border); }
+
+      /* ----- Architecture simplifiée ----- */
+      .arch {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.5rem 0;
+      }
+      .arch-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        max-width: 340px;
+      }
+      .arch-row .arch-node { flex: 1; margin: 0; max-width: none; }
+      .arch-arrow-svg {
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        color: var(--accent);
+      }
+
+      /* ----- Arrows & flow ----- */
+      .flow {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        align-items: center;
+      }
+      .flow-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        max-width: 420px;
+      }
+      .flow-item .arrow {
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        color: var(--accent);
+        opacity: 0.7;
+      }
+      .flow-box {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        font-size: 0.9rem;
+        color: var(--text);
+      }
+      .flow-box strong { display: block; margin-bottom: 0.25rem; color: var(--accent); }
+      .flow-box small { color: var(--muted); font-size: 0.8rem; }
+
+      .arrow-down {
+        width: 20px;
+        height: 20px;
+        margin: 0 auto;
+        color: var(--accent);
+        opacity: 0.8;
+      }
+
+      .arch-node {
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        border: 2px solid var(--border);
+        background: var(--card-bg);
+        transition: border-color 0.2s, transform 0.2s;
+      }
+      .arch-node:hover { border-color: var(--accent); transform: scale(1.02); }
+      .arch-node.api { border-left: 4px solid var(--accent); }
+      .arch-node.db { border-left: 4px solid var(--green); }
+      .arch-node .label { font-weight: 700; font-size: 0.95rem; color: var(--text); display: block; }
+      .arch-node .detail { color: var(--muted); font-size: 0.8rem; display: block; margin-top: 0.2rem; }
+
+      /* ----- Workflow : étapes + flèches ----- */
+      .workflow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+      }
+      .workflow-step {
+        width: 100%;
+        max-width: 520px;
+        padding: 1rem 1.15rem;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .workflow-step:hover { border-color: var(--accent); box-shadow: var(--shadow-hover); }
+      .workflow-step.reveal { opacity: 0; transform: translateY(12px); }
+      .workflow-step.reveal.visible { opacity: 1; transform: translateY(0); }
+      .workflow-step-header {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        margin-bottom: 0.65rem;
+      }
+      .workflow-num {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+      .workflow-step h3 { margin: 0; font-size: 1rem; color: var(--text); }
+      .workflow-step-desc { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem; }
+      .workflow-step .code-wrap { margin-top: 0.35rem; }
+      .workflow-step .code-wrap pre { margin: 0; }
+      .workflow-arrow {
+        width: 28px;
+        height: 28px;
+        color: var(--accent);
+        flex-shrink: 0;
+        margin: 0.25rem 0;
+      }
+      .workflow-optional {
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px dashed var(--border);
+      }
+      .workflow-optional strong { color: var(--text); font-weight: 600; }
+
+      /* ----- Embeddings ----- */
+      .embed-flow {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-top: 0.75rem;
+      }
+      .embed-line {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+      .embed-line .arrow-s { width: 18px; height: 18px; color: var(--accent); flex-shrink: 0; }
+      .embed-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-top: 0.85rem;
+      }
+      @media (max-width: 500px) { .embed-options { grid-template-columns: 1fr; } }
+      .embed-opt {
+        padding: 0.65rem 0.9rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        font-size: 0.85rem;
+      }
+      .embed-opt strong { display: block; margin-bottom: 0.25rem; font-size: 0.9rem; color: var(--text); }
+      .embed-opt code { font-size: 0.78rem; }
+      .embed-opt.openai { border-left: 3px solid var(--green); }
+      .embed-opt.fallback { border-left: 3px solid var(--orange); }
+      .embed-search {
+        margin-top: 0.85rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        background: var(--accent-soft);
+        font-size: 0.85rem;
+        color: var(--text);
+      }
+      .embed-search code { background: rgba(255,255,255,0.7); }
+
+      /* ----- Copy button ----- */
+      .code-wrap { position: relative; }
+      .copy-btn {
+        position: absolute;
+        top: 0.4rem;
+        right: 0.4rem;
+        padding: 0.2rem 0.45rem;
+        font-size: 0.7rem;
+        border-radius: 4px;
+        border: none;
+        background: rgba(255,255,255,0.12);
+        color: var(--muted);
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+      }
+      .code-wrap:hover .copy-btn { color: #94a3b8; }
+      .copy-btn:hover { background: rgba(255,255,255,0.2); color: #e2e8f0; }
+      .copy-btn.copied { background: rgba(5,150,105,0.25); color: #6ee7b7; }
+
+      /* ----- Section title ----- */
+      .section-title {
+        font-size: 1.25rem;
+        margin: 2rem 0 1rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 2px solid var(--accent);
+        color: var(--text);
+      }
+
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <h1>Demo pgvector + FastAPI + Docker Compose</h1>
+        <p class="meta">
+          Exemple minimal pour tester la recherche vectorielle avec PostgreSQL
+          (pgvector) et une API FastAPI, orchestrés avec Docker Compose.
+        </p>
+      </header>
+
+      <section class="card reveal" data-delay="0">
+        <h2 class="card-title"><span class="num">1</span> Objectif du projet</h2>
+        <p>Ce projet sert de base de test pour :</p>
+        <ul>
+          <li>stocker des embeddings de texte dans PostgreSQL via pgvector ;</li>
+          <li>effectuer une recherche par similarité sur ces embeddings ;</li>
+          <li>exposer une API HTTP simple pour interroger la base.</li>
+        </ul>
+      </section>
+
+      <h2 class="section-title">Stack et principaux fichiers</h2>
+      <div class="card reveal" data-delay="0">
+        <div class="stack-section">
+          <div class="stack-item"><code>app/main.py</code><span class="role">API FastAPI</span></div>
+          <div class="stack-item"><code>app/vector_utils.py</code><span class="role">DB + embeddings</span></div>
+          <div class="stack-item"><code>scripts/demo.py</code><span class="role">CLI démo</span></div>
+          <div class="stack-item"><code>db/init.sql</code><span class="role">extension + table</span></div>
+          <div class="stack-item"><code>docker-compose.yml</code><span class="role">db + api</span></div>
+          <div class="stack-item"><code>Dockerfile</code><span class="role">Python 3.11</span></div>
+          <div class="stack-item"><code>requirements.txt</code><span class="role">dépendances</span></div>
+          <div class="stack-item"><code>README.md</code><span class="role">instructions</span></div>
+        </div>
+      </div>
+
+      <h2 class="section-title">Architecture</h2>
+      <div class="card reveal" data-delay="0">
+        <div class="arch">
+          <div class="arch-row">
+            <div class="arch-node api">
+              <span class="label">Hôte</span>
+              <span class="detail">localhost:8001 → API</span>
+            </div>
+          </div>
+          <svg class="arch-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          <div class="arch-row">
+            <div class="arch-node api">
+              <span class="label">Service api</span>
+              <span class="detail">FastAPI · /health, POST /search</span>
+            </div>
+          </div>
+          <svg class="arch-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          <div class="arch-row">
+            <div class="arch-node db">
+              <span class="label">Service db</span>
+              <span class="detail">PostgreSQL + pgvector · table documents</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">Workflow</h2>
+      <div class="card">
+        <div class="workflow">
+          <div class="workflow-step reveal" data-delay="0">
+            <div class="workflow-step-header">
+              <span class="workflow-num">1</span>
+              <h3>Démarrer l’environnement</h3>
+            </div>
+            <p class="workflow-step-desc">À la racine du projet. Lance la base et l’API.</p>
+            <div class="code-wrap">
+              <pre><code id="cmd1">docker compose up --build</code></pre>
+              <button type="button" class="copy-btn" data-target="cmd1">Copier</button>
+            </div>
+          </div>
+          <svg class="workflow-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          <div class="workflow-step reveal" data-delay="1">
+            <div class="workflow-step-header">
+              <span class="workflow-num">2</span>
+              <h3>Insérer des documents</h3>
+            </div>
+            <p class="workflow-step-desc">Dans un autre terminal. Insère 5 docs et affiche le plus proche.</p>
+            <div class="code-wrap">
+              <pre><code id="cmd2">docker compose exec api python scripts/demo.py</code></pre>
+              <button type="button" class="copy-btn" data-target="cmd2">Copier</button>
+            </div>
+            <div class="workflow-optional">
+              <strong>Requête personnalisée :</strong>
+              <div class="code-wrap" style="margin-top:0.35rem">
+                <pre><code id="cmd3">docker compose exec -e DEMO_QUERY="..." api python scripts/demo.py</code></pre>
+                <button type="button" class="copy-btn" data-target="cmd3">Copier</button>
+              </div>
+            </div>
+          </div>
+          <svg class="workflow-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          <div class="workflow-step reveal" data-delay="2">
+            <div class="workflow-step-header">
+              <span class="workflow-num">3</span>
+              <h3>Tester l’API</h3>
+            </div>
+            <p class="workflow-step-desc">Retourne le document le plus similaire au texte envoyé.</p>
+            <div class="code-wrap">
+              <pre><code id="cmd4">curl -X POST "http://localhost:8001/search" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Votre question ici"}'</code></pre>
+              <button type="button" class="copy-btn" data-target="cmd4">Copier</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="card reveal" data-delay="0">
+        <h2 class="card-title"><span class="num">5</span> Embeddings</h2>
+        <p style="margin-bottom:0">Fonction centrale : <code>get_embedding_for_text(text)</code> dans <code>app/vector_utils.py</code>.</p>
+        <div class="embed-flow">
+          <div class="embed-line">
+            <svg class="arrow-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            Texte → vecteur 1536 dimensions
+          </div>
+        </div>
+        <div class="embed-options">
+          <div class="embed-opt openai">
+            <strong>Avec clé OpenAI</strong>
+            <code>OPENAI_API_KEY</code> défini → modèle <code>text-embedding-3-small</code>
+          </div>
+          <div class="embed-opt fallback">
+            <strong>Sans clé</strong>
+            Vecteur déterministe (hash du texte), pour tester sans API
+          </div>
+        </div>
+        <div class="embed-search">
+          Recherche en base : opérateur <code>&lt;-&gt;</code> (distance euclidienne) sur le type <code>vector</code> de PostgreSQL.
+        </div>
+      </section>
+
+      <section class="card reveal" data-delay="0">
+        <h2 class="card-title"><span class="num">6</span> Arrêt et nettoyage</h2>
+        <p>Arrêter les services : <code>docker compose down</code></p>
+        <p>Supprimer aussi les données : <code>docker compose down -v</code></p>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        // ----- Scroll reveal (cards + workflow steps) -----
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              var el = entry.target;
+              var delay = parseInt(el.getAttribute('data-delay') || '0', 10) * 120;
+              setTimeout(function () {
+                el.classList.add('visible');
+              }, delay);
+            });
+          },
+          { rootMargin: '0px 0px -40px 0px', threshold: 0.1 }
+        );
+
+        document.querySelectorAll('.reveal').forEach(function (el) {
+          el.classList.add('reveal');
+          observer.observe(el);
+        });
+
+        // ----- Copy to clipboard -----
+        document.querySelectorAll('.copy-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var id = this.getAttribute('data-target');
+            var pre = document.getElementById(id);
+            var text = pre ? pre.textContent : '';
+            navigator.clipboard.writeText(text).then(
+              function () {
+                btn.classList.add('copied');
+                btn.textContent = 'Copié';
+                setTimeout(function () {
+                  btn.classList.remove('copied');
+                  btn.textContent = 'Copier';
+                }, 2000);
+              }
+            );
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
