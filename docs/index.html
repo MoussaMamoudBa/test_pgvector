@@ -411,16 +411,21 @@
           Exemple minimal pour tester la recherche vectorielle avec PostgreSQL
           (pgvector) et une API FastAPI, orchestrés avec Docker Compose.
         </p>
+        <p class="meta" style="margin-top:0.6rem; font-size:0.9rem;">
+          Un seul ordre : <code>docker compose up --build</code>. La base est initialisée automatiquement,
+          l’API écoute sur le port 8001. Idéal pour un premier contact avec la recherche par similarité en base.
+        </p>
       </header>
 
       <section class="card reveal" data-delay="0">
         <h2 class="card-title"><span class="num">1</span><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Objectif du projet</h2>
         <p>Ce projet sert de base de test pour :</p>
         <ul>
-          <li>stocker des embeddings de texte dans PostgreSQL via pgvector ;</li>
-          <li>effectuer une recherche par similarité sur ces embeddings ;</li>
-          <li>exposer une API HTTP simple pour interroger la base.</li>
+          <li><strong>Stocker des embeddings</strong> : des textes sont convertis en vecteurs (embeddings) et enregistrés dans PostgreSQL grâce à l’extension pgvector (type <code>vector</code>).</li>
+          <li><strong>Recherche par similarité</strong> : à partir d’un texte ou d’un vecteur de requête, la base retourne les documents les plus proches (distance euclidienne).</li>
+          <li><strong>API HTTP</strong> : un endpoint <code>POST /search</code> reçoit une requête texte, calcule son embedding et renvoie le document le plus similaire.</li>
         </ul>
+        <p style="margin-top:0.75rem; margin-bottom:0;">En résumé : vous pouvez insérer des documents (avec ou sans clé OpenAI), puis interroger l’API ou le script de démo pour retrouver le contenu le plus proche d’une question.</p>
       </section>
 
       <h2 class="section-title"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Stack et principaux fichiers</h2>
